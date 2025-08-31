@@ -1,0 +1,7 @@
+.env
+*.pyc
+__pycache__/
+chatbot/logs/
+chat_log.json
+*.log
+.DS_Store
