@@ -5,3 +5,5 @@ chatbot/logs/
 chat_log.json
 *.log
 .DS_Store
+*/workspace/
+workspace/

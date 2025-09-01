@@ -1,8 +1,10 @@
+# chatbot/src/filesystem_mcp.py
 import asyncio
 from pathlib import Path
 from contextlib import AsyncExitStack
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+from logger import mcp_logger
 
 class FilesystemMCP:
     """Manages file operations using MCP Filesystem server"""
@@ -15,6 +17,12 @@ class FilesystemMCP:
                 args=["-y", "@modelcontextprotocol/server-filesystem", directory]
             )
             
+            # Log request
+            mcp_logger.log_mcp_request("filesystem", "write_file", {
+                "path": f"{directory}/{filename}",
+                "content_length": len(content)
+            })
+            
             async with AsyncExitStack() as stack:
                 (read, write) = await stack.enter_async_context(stdio_client(fs_server))
                 fs_session = await stack.enter_async_context(ClientSession(read, write))
@@ -25,9 +33,13 @@ class FilesystemMCP:
                     "content": content
                 })
                 
+                # Log successful response
+                mcp_logger.log_mcp_response("filesystem", "write_file", result, success=True)
                 print(f"File created via MCP Filesystem: {filename}")
                 return result
         except Exception as e:
+            # Log error
+            mcp_logger.log_mcp_error("filesystem", "write_file", str(e))
             print(f"MCP Filesystem Error: {e}")
             return None
 
@@ -39,9 +51,17 @@ class FilesystemMCP:
             
             file_path = repo_dir / filename
             file_path.write_text(content, encoding="utf-8")
+            
+            # Log successful file creation
+            mcp_logger.log_mcp_response("filesystem", "create_file_direct", {
+                "file_path": str(file_path),
+                "content_length": len(content)
+            }, success=True)
+            
             print(f"File created directly: {file_path}")
             return True
         except Exception as e:
+            mcp_logger.log_mcp_error("filesystem", "create_file_direct", str(e))
             print(f"Error creating file: {e}")
             return False
 
@@ -50,6 +70,10 @@ async def test_filesystem():
     fs = FilesystemMCP()
     result = await fs.create_file_direct("# Test File\nCreated with FilesystemMCP", "test.md", "test-repo")
     print(f"Test result: {result}")
+    
+    # Show log summary
+    summary = mcp_logger.get_log_summary()
+    print(f"Log summary: {summary}")
 
 if __name__ == "__main__":
     asyncio.run(test_filesystem())
