@@ -47,7 +47,7 @@ Run the chatbot interactively:
 python chatbot/src/llm_client.py
 ```
 - Type your questions in the console.
-- Type `salir` to exit the chat.
+- Type `exit` or `quit` to exit the chat.
 - All interactions will be logged in `chat_log.json`.
 
 ## Directory Structure
@@ -66,10 +66,6 @@ astronomy-mcp/
 ├── .gitignore
 └── README.md
 ```
-
-## Next Steps
-- Integrate official MCP servers (Filesystem, Git) for tool-augmented conversations.
-- Implement a custom MCP server for advanced functionalities.
 
 ## License
 This project is for educational purposes.
