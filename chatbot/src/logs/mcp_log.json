@@ -65,5 +65,71 @@
     "params": {
       "date": "septiembre"
     }
+  },
+  {
+    "timestamp": "2025-09-02T18:24:09.428582",
+    "type": "mcp_response",
+    "server": "filesystem",
+    "method": "create_file_direct",
+    "success": true,
+    "response": "{'file_path': 'workspace/demo-eclipse-project/README.md', 'content_length': 1220}"
+  },
+  {
+    "timestamp": "2025-09-02T18:24:09.428947",
+    "type": "mcp_request",
+    "server": "git",
+    "method": "setup_repository",
+    "params": {
+      "repo_name": "demo-eclipse-project",
+      "path": "workspace/demo-eclipse-project"
+    }
+  },
+  {
+    "timestamp": "2025-09-02T18:24:13.086156",
+    "type": "mcp_response",
+    "server": "git",
+    "method": "git_set_working_dir",
+    "success": true,
+    "response": "{\n  \"success\": true,\n  \"message\": \"Working directory set to: /home/bianca_cal/REDES_PRY1/chatbot/src/workspace/demo-eclipse-project (Existing Git repository).\",\n  \"path\": \"/home/bianca_cal/REDES_PRY1/chatbot/src/workspace/demo-eclipse-project\",\n  \"initialized\": false\n}"
+  },
+  {
+    "timestamp": "2025-09-02T18:24:13.116785",
+    "type": "mcp_response",
+    "server": "git",
+    "method": "git_init",
+    "success": true,
+    "response": "{\n  \"success\": true,\n  \"message\": \"Initialized empty Git repository in /home/bianca_cal/REDES_PRY1/chatbot/src/workspace/demo-eclipse-project/.git/\",\n  \"path\": \"/home/bianca_cal/REDES_PRY1/chatbot/src/workspace/demo-eclipse-project\",\n  \"gitDirExists\": true\n}"
+  },
+  {
+    "timestamp": "2025-09-02T18:24:13.125793",
+    "type": "mcp_response",
+    "server": "git",
+    "method": "git_status",
+    "success": true,
+    "response": "{\n  \"current_branch\": \"main (no commits yet)\",\n  \"staged_changes\": {},\n  \"unstaged_changes\": {},\n  \"untracked_files\": [\n    \"README.md\"\n  ],\n  \"conflicted_files\": [],\n  \"is_clean\": false\n}"
+  },
+  {
+    "timestamp": "2025-09-02T18:24:13.144614",
+    "type": "mcp_response",
+    "server": "git",
+    "method": "git_add",
+    "success": true,
+    "response": "{\n  \"success\": true,\n  \"statusMessage\": \"Successfully staged: .. Remember to write clear, concise commit messages using the Conventional Commits format (e.g., 'feat(scope): subject').\",\n  \"filesStaged\": [\n    \".\"\n  ]\n}"
+  },
+  {
+    "timestamp": "2025-09-02T18:24:13.191047",
+    "type": "mcp_response",
+    "server": "git",
+    "method": "git_commit",
+    "success": true,
+    "response": "{\n  \"success\": true,\n  \"statusMessage\": \"Commit successful: e14ccb0\",\n  \"commitHash\": \"e14ccb0\",\n  \"commitMessage\": \"feat(astronomy): Add solar eclipses documentation\",\n  \"committedFiles\": [\n    \"README.md\"\n  ]\n}"
+  },
+  {
+    "timestamp": "2025-09-02T18:24:13.191392",
+    "type": "mcp_response",
+    "server": "git",
+    "method": "setup_repository",
+    "success": true,
+    "response": "{'repo_name': 'demo-eclipse-project', 'status': 'completed'}"
   }
 ]

@@ -194,39 +194,39 @@ async def test_eclipse_client():
     """Función de prueba del cliente Eclipse MCP"""
     client = EclipseMCPClient()
     
-    print("🧪 Probando Eclipse Calculator MCP Client...")
+    print("Probando Eclipse Calculator MCP Client...")
     
     # Probar lista de herramientas
     print("\n1. Listando herramientas disponibles:")
     tools = await client.list_available_tools()
     for tool in tools:
         if "error" in tool:
-            print(f"   ❌ {tool['error']}")
+            print(f"   {tool['error']}")
         else:
-            print(f"   ✅ {tool['name']}: {tool['description']}")
+            print(f"   {tool['name']}: {tool['description']}")
     
     # Probar cálculo de eclipse
     print("\n2. Calculando eclipse para Guatemala City el 2024-04-08:")
     result = await client.calculate_eclipse_visibility("2024-04-08", "Guatemala City")
     
     if "error" in result:
-        print(f"   ❌ Error: {result['error']}")
+        print(f"   Error: {result['error']}")
     else:
-        print(f"   ✅ Eclipse visible: {result.get('visible', False)}")
-        print(f"   📊 Cobertura: {result.get('coverage', 'N/A')}")
-        print(f"   ⏰ Hora máxima: {result.get('times', {}).get('maximum', 'N/A')}")
+        print(f"   Eclipse visible: {result.get('visible', False)}")
+        print(f"    Cobertura: {result.get('coverage', 'N/A')}")
+        print(f"   Hora máxima: {result.get('times', {}).get('maximum', 'N/A')}")
     
     # Probar camino de eclipse
     print("\n3. Obteniendo camino de eclipse para 2024-04-08:")
     path_result = await client.get_eclipse_path("2024-04-08")
     
     if "error" in path_result:
-        print(f"   ❌ Error: {path_result['error']}")
+        print(f"    Error: {path_result['error']}")
     else:
-        print(f"   ✅ Tipo: {path_result.get('eclipse_type', 'N/A')}")
-        print(f"   ⏱️  Duración máxima: {path_result.get('max_duration', 'N/A')}")
+        print(f" Tipo: {path_result.get('eclipse_type', 'N/A')}")
+        print(f" Duración máxima: {path_result.get('max_duration', 'N/A')}")
     
-    print("\n🎉 Pruebas del cliente Eclipse MCP completadas!")
+    print("\n Pruebas del cliente Eclipse MCP completadas!")
 
 if __name__ == "__main__":
     asyncio.run(test_eclipse_client())
