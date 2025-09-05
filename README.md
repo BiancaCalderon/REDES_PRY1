@@ -1,71 +1,94 @@
-# Astronomy-MCP Chatbot
+# MCP Chatbot for F1 and Astronomy
 
-## Project Overview
-This project is a modular chatbot that integrates with Large Language Models (LLMs) using the Anthropic Claude API and supports the Model Context Protocol (MCP) for tool interoperability. The chatbot maintains conversational context, logs all interactions, and is designed to connect with both official and custom MCP servers.
+## 1. Project Overview
 
-## Features
-- **LLM Integration:** Connects to Anthropic Claude via API for natural language conversations.
-- **Context Management:** Maintains conversation history for contextual responses.
-- **JSON Logging:** Logs all user and assistant interactions in a structured JSON file.
-- **MCP Client Architecture:** Prepared to connect with official and custom MCP servers (Filesystem, Git, etc.).
-- **Modular Design:** Codebase is organized for easy extension and maintenance.
+This project is a chatbot designed to demonstrate the modularity of the Model Context Protocol (MCP). The chatbot can connect to external MCP servers and also runs its own local MCP server for astronomical calculations.
 
-## Implemented Functionalities
-- Ask questions to the LLM and receive contextual answers.
-- Maintain session context so follow-up questions are understood.
-- Log all chat interactions in `chat_log.json`.
+It runs a self-contained, multi-tool Astronomy server.
 
-## Installation
 
-1. **Clone the repository:**
-   ```bash
-   git clone <your-repo-url>
-   cd astronomy-mcp
-   ```
+## 2. Requirements & Installation
 
-2. **Set up a virtual environment (optional but recommended):**
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
+Follow these steps to set up and run the project.
 
-3. **Install dependencies:**
-   ```bash
-   pip install -r requirementx.txt
-   ```
+### 2.1. Prerequisites
 
-4. **Configure your API key:**
-   - Copy `.env.example` to `.env` and add your Anthropic API key:
-     ```
-     ANTHROPIC_API_KEY=your_api_key_here
-     ```
+- Python 3.10+
+- An Anthropic API key (for optional LLM functionalities)
 
-## Usage
+### 2.2. Installation Steps
 
-Run the chatbot interactively:
+1.  **Clone the repository:**
+    ```bash
+    git clone <your-repo-url>
+    cd REDES_PRY1
+    ```
+
+2.  **Set up a virtual environment:**
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
+
+3.  **Install dependencies:**
+    The project's dependencies are listed in `requirementx.txt`. Install them using pip:
+    ```bash
+    pip install -r requirementx.txt
+    ```
+
+4.  **Configure your API key (Optional):**
+    If you plan to use LLM functionalities, copy `.env.example` to `.env` and add your Anthropic API key:
+    ```
+    ANTHROPIC_API_KEY=your_api_key_here
+    ```
+
+## 3. How to Run the Chatbot
+
+To start the main application, run the `main.py` script from the root directory:
+
 ```bash
-python chatbot/src/llm_client.py
-```
-- Type your questions in the console.
-- Type `exit` or `quit` to exit the chat.
-- All interactions will be logged in `chat_log.json`.
-
-## Directory Structure
-```
-astronomy-mcp/
-├── chatbot/
-│   ├── logs/
-│   └── src/
-│       ├── conversation_manager.py
-│       ├── llm_client.py
-│       ├── logger.py
-│       ├── main.py
-│       └── mcp_manager.py
-├── requirementx.txt
-├── .env.example
-├── .gitignore
-└── README.md
+python3 chatbot/src/main.py
 ```
 
-## License
-This project is for educational purposes.
+This will launch a menu where you can navigate to the different MCP functionalities.
+
+## 4. MCP Functionality
+
+This project implements both a local server and a client for an external server.
+
+### 4.1. Astronomy MCP Server (Local)
+
+The chatbot includes its own powerful, local MCP server for providing astronomical data. The server runs automatically when you access the "Astronomía" menu in the chatbot.
+
+#### Specification
+
+The server (`eclipse-calculator-db`) provides tools to query a curated internal database of solar and lunar eclipses.
+
+#### Available Tools
+
+1.  **`list_eclipses_by_year`**
+    -   **Description:** Lists all eclipses stored in the database for a given year.
+    -   **Parameters:**
+        -   `year` (integer): The year you want to query.
+    -   **Example Usage (via Chatbot Menu):**
+        1.  Select option "1. Listar eclipses por año".
+        2.  Enter the year (e.g., `2026`).
+        3.  The chatbot will display a table with the date, type, description, and visibility locations for all eclipses in that year.
+
+2.  **`calculate_eclipse_visibility`**
+    -   **Description:** Checks if a specific eclipse is visible from a specific location and provides details.
+    -   **Parameters:**
+        -   `date` (string): The date of the eclipse in `YYYY-MM-DD` format.
+        -   `location` (string): The name of the city (e.g., `Guatemala City`, `Madrid`).
+    -   **Example Usage (via Chatbot Menu):**
+        1.  Select option "2. Verificar visibilidad de eclipse".
+        2.  Enter the date (e.g., `2026-08-12`).
+        3.  Enter the location (e.g., `Madrid`).
+
+3.  **`predict_next_eclipse`**
+    -   **Description:** Finds the next eclipse in the database visible from a given location.
+    -   **Parameters:**
+        -   `location` (string): The name of the city.
+    -   **Example Usage (via Chatbot Menu):**
+        1.  Select option "3. Predecir próximo eclipse visible".
+        2.  Enter the location (e.g., `Guatemala City`).
