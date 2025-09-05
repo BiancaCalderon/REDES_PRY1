@@ -1,0 +1,14 @@
+{
+    "f1": {
+      "type": "stdio",
+      "cwd": " /home/bianca_cal/mcp_net/src",
+      "command": "python3",
+      "args": ["-m", "mcp_f1_server"]
+    },
+    "pokemon": {
+      "type": "stdio",
+      "cwd": "/home/tu_usuario/peers/pokemon-mcp/src",
+      "command": "python3",
+      "args": ["-m", "pokemon_mcp"]
+    }
+  }
