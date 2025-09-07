@@ -1,0 +1,14 @@
+{
+    "builds": [
+      {
+        "src": "remote_mcp_server.py",
+        "use": "@vercel/python"
+      }
+    ],
+    "routes": [
+      {
+        "src": "/(.*)",
+        "dest": "remote_mcp_server.py"
+      }
+    ]
+  }

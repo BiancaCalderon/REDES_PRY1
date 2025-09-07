@@ -1,0 +1,9 @@
+runtime: python311
+
+env_variables:
+  PORT: 8080
+  HOST: 0.0.0.0
+
+automatic_scaling:
+  min_instances: 0
+  max_instances: 10
