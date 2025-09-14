@@ -1,23 +1,4 @@
 {
-  "eclipses": [
-    {
-      "id": "eclipse_2024_04_08",
-      "type": "solar",
-      "date": "2024-04-08",
-      "visibility": {
-        "guatemala_city": {
-          "visible": true,
-          "partial": true,
-          "coverage": "65%",
-          "start_time": "12:34:00",
-          "max_time": "14:15:00",
-          "end_time": "15:45:00"
-        }
-      },
-      "path_totality": [...],
-      "duration_max": "04:28"
-    }
-  ],
-  "planets": {...},
-  "meteor_showers": {...}
+  "REMOTE_MCP_URL": "https://eclipse-mcp-remote.up.railway.app/",
+  "ANTHROPIC_API_KEY": "tu-api-key"
 }
