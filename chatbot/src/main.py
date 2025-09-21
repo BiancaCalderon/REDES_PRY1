@@ -27,6 +27,7 @@ from conversation_manager import ConversationManager
 from eclipse_mcp_client import EclipseMCPClient
 from external_mcp_client import ExternalMCPClient
 from f1_mcp_client import F1MCPClient
+from remote_mcp_client import RemoteMcpClient
 
 from rich.console import Console
 from rich.table import Table
@@ -56,8 +57,7 @@ MENU_OPTIONS = [
     ("Chat General (LLM)", "chat_general"),
     ("Astronomía (Eclipse MCP)", "astronomia"),
     ("F1 Strategy (F1 MCP)", "f1"),
-    ("MCP de Compañero 1", "mcp1"),
-    ("MCP de Compañero 2", "mcp2"),
+    ("Personal Trainer MCP", "personal_trainer"),
     ("MCP Remoto", "mcp_remoto"),
     ("Ver logs", "logs"),
     ("Salir", "salir")
@@ -76,7 +76,7 @@ def mostrar_menu():
 def seleccionar_opcion():
     while True:
         try:
-            opcion = Prompt.ask("[input]Selecciona una opción (1-8)", default="1")
+            opcion = Prompt.ask(f"[input]Selecciona una opción (1-{len(MENU_OPTIONS)})", default="1")
             idx = int(opcion)
             if 1 <= idx <= len(MENU_OPTIONS):
                 return MENU_OPTIONS[idx-1][1]
@@ -111,100 +111,340 @@ async def f1_mcp_loop():
         except Exception as e:
             console.print(f"[error]Error: {e}")
 
-async def astronomia_mcp_loop():
-    """Bucle para interactuar con el MCP de Astronomía (DB Version)."""
-    async with EclipseMCPClient() as client:
-        while True:
-            console.clear()
-            console.print(Panel("[title]🔭 [bold]Menú de Astronomía (Base de Datos Interna)[/bold]", style="title"))
-            
-            astro_menu = Table(show_header=False, box=None)
-            astro_menu.add_row("[option]1[/option]", "Listar eclipses por año")
-            astro_menu.add_row("[option]2[/option]", "Verificar visibilidad de eclipse")
-            astro_menu.add_row("[option]3[/option]", "Predecir próximo eclipse visible")
-            astro_menu.add_row("[option]4[/option]", "Volver al menú principal")
-            console.print(astro_menu)
+async def personal_trainer_mcp_loop(logger: MCPLogger):
+    """Bucle para interactuar con el MCP de Personal Trainer."""
+    console.clear()
+    console.print(Panel("[title]🏋️ [bold]Menú Personal Trainer (MCP)[/bold]", style="title"))
+    console.print("Comandos disponibles:")
+    console.print("  - /metrics <sexo> <edad> <altura_cm> <peso_kg>")
+    console.print("  - /recommend <objetivo> <deporte> <limite>")
+    console.print("  - /routine <objetivo> <dias> <minutos> <experiencia>")
+    console.print("  - /recommend_metrics <sexo> <edad> <altura_cm> <peso_kg> <objetivo> <limite>")
+    console.print("  - volver")
 
-            choice = Prompt.ask("\n[input]Elige una opción[/input]", choices=["1", "2", "3", "4"], default="4")
-
-            if choice == '1':
-                year_str = Prompt.ask("[input]Ingresa el año (YYYY)[/input]")
-                try:
-                    year = int(year_str)
-                    console.print("\n[highlight]Buscando...[/highlight]")
-                    result = await client.list_eclipses_by_year(year)
-                    if result and not result.get("error"):
-                        eclipses = result.get('eclipses', [])
-                        table = Table(title=f"Eclipses en {year}")
-                        table.add_column("Fecha", style="bold green")
-                        table.add_column("Tipo", style="cyan")
-                        table.add_column("Descripción", style="magenta")
-                        table.add_column("Visible en", style="yellow")
-                        if eclipses:
-                            for e in eclipses:
-                                locations = ", ".join(e.get('visible_in', [])) or "N/A"
-                                table.add_row(e.get('date'), e.get('type'), e.get('description'), locations)
-                        else:
-                            table.add_row(f"No hay datos para {year}", "", "", "")
-                        console.print(table)
-                    else:
-                        console.print(Panel(f"Error: {result.get('error', 'Desconocido')}", title="[error]Error[/error]"))
-                except ValueError:
-                    console.print(Panel("Año inválido.", title="[error]Error[/error]"))
-                Prompt.ask("\n[input]Presiona Enter para continuar...[/input]")
-
-            elif choice == '2':
-                date = Prompt.ask("[input]Ingresa la fecha (YYYY-MM-DD)[/input]")
-                location = Prompt.ask("[input]Ingresa la ubicación (ej: Guatemala City)[/input]")
-                console.print("\n[highlight]Calculando...[/highlight]")
-                result = await client.calculate_eclipse_visibility(date, location)
-                if result and not result.get("error"):
-                    panel_content = f"[bold]Fecha:[/bold] {result.get('date', 'N/A')}\n"
-                    panel_content += f"[bold]Ubicación:[/bold] {result.get('location', 'N/A')}\n"
-                    panel_content += f"[bold]Visible:[/bold] {'Sí' if result.get('visible') else 'No'}\n"
-                    if result.get('visible'):
-                        panel_content += f"[bold]Cobertura:[/bold] {result.get('coverage', 'N/A')}\n"
-                        panel_content += f"[bold]Hora Máxima:[/bold] {result.get('max_time', 'N/A')}"
-                    console.print(Panel(panel_content, title="[success]Resultado de Visibilidad[/success]"))
-                else:
-                    console.print(Panel(f"Error: {result.get('error', 'Desconocido')}", title="[error]Error[/error]"))
-                Prompt.ask("\n[input]Presiona Enter para continuar...[/input]")
-
-            elif choice == '3':
-                location = Prompt.ask("[input]Ingresa la ubicación (ej: Guatemala City)[/input]")
-                console.print("\n[highlight]Buscando...[/highlight]")
-                result = await client.predict_next_eclipse(location)
-                if result and not result.get("error"):
-                    next_eclipse = result.get('next_eclipse', {})
-                    panel_content = f"[bold]Fecha:[/bold] {next_eclipse.get('date', 'N/A')}\n"
-                    panel_content += f"[bold]Tipo:[/bold] {next_eclipse.get('type', 'N/A')}\n"
-                    panel_content += f"[bold]Descripción:[/bold] {next_eclipse.get('description', 'N/A')}"
-                    console.print(Panel(panel_content, title=f"[success]Próximo Eclipse en {location}[/success]"))
-                else:
-                    console.print(Panel(f"Error: {result.get('error', 'Desconocido')}", title="[error]Error[/error]"))
-                Prompt.ask("\n[input]Presiona Enter para continuar...[/input]")
-
-            elif choice == '4':
+    server_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'personal_trainer_mcp', 'server.py'))
+    
+    while True:
+        try:
+            command = Prompt.ask("[input]Comando[/input]").strip()
+            if command.lower() == "volver":
                 break
 
+            parts = command.split()
+            cmd = parts[0]
+            
+            async with ExternalMCPClient(server_path) as client:
+                if cmd == "/metrics":
+                    if len(parts) != 5:
+                        console.print("[error]Uso: /metrics <sexo> <edad> <altura_cm> <peso_kg>")
+                        continue
+                    sexo = parts[1]
+                    edad = int(parts[2])
+                    altura_cm = int(parts[3])
+                    peso_kg = int(parts[4])
+                    result = await client.call_tool("compute_metrics", {"args": {"sexo": sexo, "edad": edad, "altura_cm": altura_cm, "peso_kg": peso_kg}})
+                    console.print(Panel(json.dumps(result, indent=2), title="[success]Métricas Calculadas[/success]"))
+                
+                elif cmd == "/recommend":
+                    if len(parts) != 4:
+                        console.print("[error]Uso: /recommend <objetivo> <deporte> <limite>")
+                        continue
+                    objetivo = parts[1]
+                    deporte = parts[2]
+                    limite = int(parts[3])
+                    result = await client.call_tool("recommend_exercises", {"args": {"objetivo": objetivo, "deporte": deporte, "limite": limite}})
+                    console.print(Panel(json.dumps(result, indent=2), title="[success]Ejercicios Recomendados[/success]"))
+
+                elif cmd == "/routine":
+                    if len(parts) != 5:
+                        console.print("[error]Uso: /routine <objetivo> <dias> <minutos> <experiencia>")
+                        continue
+                    objetivo = parts[1]
+                    dias = int(parts[2])
+                    minutos = int(parts[3])
+                    exp = parts[4]
+                    result = await client.call_tool("build_routine_tool", {"args": {"objetivo": objetivo, "dias_por_semana": dias, "minutos_por_sesion": minutos, "experiencia": exp}})
+                    console.print(Panel(json.dumps(result, indent=2), title="[success]Rutina Semanal[/success]"))
+
+                elif cmd == "/recommend_metrics":
+                    if len(parts) != 7:
+                        console.print("[error]Uso: /recommend_metrics <sexo> <edad> <altura_cm> <peso_kg> <objetivo> <limite>")
+                        continue
+                    sexo = parts[1]
+                    edad = int(parts[2])
+                    altura_cm = int(parts[3])
+                    peso_kg = int(parts[4])
+                    objetivo = parts[5]
+                    limite = int(parts[6])
+                    result = await client.call_tool("recommend_by_metrics_tool", {"args": {"sexo": sexo, "edad": edad, "altura_cm": altura_cm, "peso_kg": peso_kg, "objetivo": objetivo, "limite": limite}})
+                    console.print(Panel(json.dumps(result, indent=2), title="[success]Recomendaciones por Métricas[/success]"))
+
+                else:
+                    console.print("[error]Comando no válido.")
+
+        except Exception as e:
+            console.print(f"[error]Error: {e}")
+
+
+
+async def astronomia_mcp_loop(logger: MCPLogger):
+    """Bucle para interactuar con el MCP de Astronomía (DB Version)."""
+    try:
+        async with EclipseMCPClient() as client:
+            while True:
+                console.clear()
+                console.print(Panel("[title]🔭 [bold]Menú de Astronomía (Base de Datos Interna)[/bold]", style="title"))
+                
+                astro_menu = Table(show_header=False, box=None)
+                astro_menu.add_row("[option]1[/option]", "Listar eclipses por año")
+                astro_menu.add_row("[option]2[/option]", "Verificar visibilidad de eclipse")
+                astro_menu.add_row("[option]3[/option]", "Predecir próximo eclipse visible")
+                astro_menu.add_row("[option]4[/option]", "Volver al menú principal")
+                console.print(astro_menu)
+
+                choice = Prompt.ask("\n[input]Elige una opción[/input]", choices=["1", "2", "3", "4"], default="4")
+
+                if choice == '1':
+                    year_str = Prompt.ask("[input]Ingresa el año (YYYY)[/input]")
+                    try:
+                        year = int(year_str)
+                        console.print("\n[highlight]Buscando...[/highlight]")
+                        params = {"year": year}
+                        logger.log_mcp_request("Eclipse MCP", "list_eclipses_by_year", params)
+                        result = await client.list_eclipses_by_year(year)
+                        logger.log_mcp_response("Eclipse MCP", "list_eclipses_by_year", result, success=not result.get("error"))
+                        if result and not result.get("error"):
+                            eclipses = result.get('eclipses', [])
+                            table = Table(title=f"Eclipses en {year}")
+                            table.add_column("Fecha", style="bold green")
+                            table.add_column("Tipo", style="cyan")
+                            table.add_column("Descripción", style="magenta")
+                            table.add_column("Visible en", style="yellow")
+                            if eclipses:
+                                for e in eclipses:
+                                    locations = ", ".join(e.get('visible_in', [])) or "N/A"
+                                    table.add_row(e.get('date'), e.get('type'), e.get('description'), locations)
+                            else:
+                                table.add_row(f"No hay datos para {year}", "", "", "")
+                            console.print(table)
+                        else:
+                            logger.log_mcp_error("Eclipse MCP", "list_eclipses_by_year", result.get('error', 'Desconocido'))
+                            console.print(Panel(f"Error: {result.get('error', 'Desconocido')}", title="[error]Error[/error]"))
+                    except ValueError:
+                        console.print(Panel("Año inválido.", title="[error]Error[/error]"))
+                    Prompt.ask("\n[input]Presiona Enter para continuar...[/input]")
+
+                elif choice == '2':
+                    date = Prompt.ask("[input]Ingresa la fecha (YYYY-MM-DD)[/input]")
+                    location = Prompt.ask("[input]Ingresa la ubicación (ej: Guatemala City)[/input]")
+                    console.print("\n[highlight]Calculando...[/highlight]")
+                    params = {"date": date, "location": location}
+                    logger.log_mcp_request("Eclipse MCP", "calculate_eclipse_visibility", params)
+                    result = await client.calculate_eclipse_visibility(date, location)
+                    logger.log_mcp_response("Eclipse MCP", "calculate_eclipse_visibility", result, success=not result.get("error"))
+                    if result and not result.get("error"):
+                        panel_content = f"[bold]Fecha:[/bold] {result.get('date', 'N/A')}\n"
+                        panel_content += f"[bold]Ubicación:[/bold] {result.get('location', 'N/A')}\n"
+                        panel_content += f"[bold]Visible:[/bold] {'Sí' if result.get('visible') else 'No'}\n"
+                        if result.get('visible'):
+                            panel_content += f"[bold]Cobertura:[/bold] {result.get('coverage', 'N/A')}\n"
+                            panel_content += f"[bold]Hora Máxima:[/bold] {result.get('max_time', 'N/A')}"
+                        console.print(Panel(panel_content, title="[success]Resultado de Visibilidad[/success]"))
+                    else:
+                        logger.log_mcp_error("Eclipse MCP", "calculate_eclipse_visibility", result.get('error', 'Desconocido'))
+                        console.print(Panel(f"Error: {result.get('error', 'Desconocido')}", title="[error]Error[/error]"))
+                    Prompt.ask("\n[input]Presiona Enter para continuar...[/input]")
+
+                elif choice == '3':
+                    location = Prompt.ask("[input]Ingresa la ubicación (ej: Guatemala City)[/input]")
+                    console.print("\n[highlight]Buscando...[/highlight]")
+                    params = {"location": location}
+                    logger.log_mcp_request("Eclipse MCP", "predict_next_eclipse", params)
+                    result = await client.predict_next_eclipse(location)
+                    logger.log_mcp_response("Eclipse MCP", "predict_next_eclipse", result, success=not result.get("error"))
+                    if result and not result.get("error"):
+                        next_eclipse = result.get('next_eclipse', {})
+                        panel_content = f"[bold]Fecha:[/bold] {next_eclipse.get('date', 'N/A')}\n"
+                        panel_content += f"[bold]Tipo:[/bold] {next_eclipse.get('type', 'N/A')}\n"
+                        panel_content += f"[bold]Descripción:[/bold] {next_eclipse.get('description', 'N/A')}"
+                        console.print(Panel(panel_content, title=f"[success]Próximo Eclipse en {location}[/success]"))
+                    else:
+                        logger.log_mcp_error("Eclipse MCP", "predict_next_eclipse", result.get('error', 'Desconocido'))
+                        console.print(Panel(f"Error: {result.get('error', 'Desconocido')}", title="[error]Error[/error]"))
+                    Prompt.ask("\n[input]Presiona Enter para continuar...[/input]")
+
+                elif choice == '4':
+                    break
+    except Exception as e:
+        logger.log_mcp_error("Eclipse MCP", "connection_error", str(e))
+        console.print(f"[error]Error al conectar con Eclipse MCP: {e}")
+        Prompt.ask("\n[input]Presiona Enter para continuar...[/input]")
+
+
+
+async def remote_mcp_loop():
+    """Bucle para interactuar con el MCP Remoto."""
+    console.clear()
+    console.print(Panel("[title]📡 [bold]Menú MCP Remoto (Eclipse Calculator)[/bold]", style="title"))
+
+    # Cargar configuración para obtener la URL
+    config = {}
+    try:
+        with open(os.path.join(os.path.dirname(__file__), '..', 'config', 'config.json')) as f:
+            config = json.load(f)
+    except FileNotFoundError:
+        console.print("[error]Archivo de configuración no encontrado.[/error]")
+        Prompt.ask("[input]Presiona Enter para continuar...[/input]")
+        return
+    
+    if "REMOTE_MCP_URL" not in config or not config["REMOTE_MCP_URL"]:
+        console.print("[error]La URL para 'REMOTE_MCP_URL' no está definida en el archivo de configuración.[/error]")
+        Prompt.ask("[input]Presiona Enter para continuar...[/input]")
+        return
+
+    client = RemoteMcpClient(config)
+
+    while True:
+        console.clear()
+        console.print(Panel("[title]📡 [bold]Menú MCP Remoto (Eclipse Calculator)[/bold]", style="title"))
+        
+        remote_menu = Table(show_header=False, box=None)
+        remote_menu.add_row("[option]1[/option]", "Verificar Conexión (status)")
+        remote_menu.add_row("[option]2[/option]", "Listar eclipses por año")
+        remote_menu.add_row("[option]3[/option]", "Calcular visibilidad de eclipse")
+        remote_menu.add_row("[option]4[/option]", "Predecir próximo eclipse")
+        remote_menu.add_row("[option]5[/option]", "Obtener ruta de eclipse")
+        remote_menu.add_row("[option]6[/option]", "Obtener consejos de seguridad")
+        remote_menu.add_row("[option]7[/option]", "Volver al menú principal")
+        console.print(remote_menu)
+
+        choice = Prompt.ask("\n[input]Elige una opción[/input]", choices=["1", "2", "3", "4", "5", "6", "7"], default="7")
+
+        if choice == '1':
+            result = client.check_server_status()
+            console.print(Panel(json.dumps(result, indent=2), title="[success]Estado del Servidor[/success]"))
+            Prompt.ask("\n[input]Presiona Enter para continuar...[/input]")
+
+        elif choice == '2':
+            year = int(Prompt.ask("[input]Ingresa el año[/input]"))
+            result = client.list_eclipses_by_year(year)
+            console.print(Panel(json.dumps(result, indent=2), title=f"[success]Eclipses en {year}[/success]"))
+            Prompt.ask("\n[input]Presiona Enter para continuar...[/input]")
+        
+        elif choice == '3':
+            date = Prompt.ask("[input]Ingresa la fecha (YYYY-MM-DD)[/input]")
+            location = Prompt.ask("[input]Ingresa la ubicación[/input]")
+            result = client.calculate_eclipse_visibility(date, location)
+            console.print(Panel(json.dumps(result, indent=2), title="[success]Visibilidad de Eclipse[/success]"))
+            Prompt.ask("\n[input]Presiona Enter para continuar...[/input]")
+
+        elif choice == '4':
+            location = Prompt.ask("[input]Ingresa la ubicación[/input]")
+            result = client.predict_next_eclipse(location)
+            console.print(Panel(json.dumps(result, indent=2), title="[success]Próximo Eclipse[/success]"))
+            Prompt.ask("\n[input]Presiona Enter para continuar...[/input]")
+
+        elif choice == '5':
+            date = Prompt.ask("[input]Ingresa la fecha (YYYY-MM-DD)[/input]")
+            result = client.get_eclipse_path(date)
+            console.print(Panel(json.dumps(result, indent=2), title="[success]Ruta del Eclipse[/success]"))
+            Prompt.ask("\n[input]Presiona Enter para continuar...[/input]")
+
+        elif choice == '6':
+            date = Prompt.ask("[input]Ingresa la fecha (YYYY-MM-DD)[/input]")
+            result = client.get_safety_advice(date)
+            console.print(Panel(json.dumps(result, indent=2), title="[success]Consejos de Seguridad[/success]"))
+            Prompt.ask("\n[input]Presiona Enter para continuar...[/input]")
+        
+        elif choice == '7':
+            break
 
 
 
 async def main_menu_loop():
     """Bucle del menú principal mejorado."""
+    chatbot = MCPChatbot() # Instanciar una vez
+
     while True:
         mostrar_menu()
         seleccion = seleccionar_opcion()
-        if seleccion == "astronomia":
-            await astronomia_mcp_loop()
+        
+        if seleccion == "chat_general":
+            await chat_general_loop(chatbot)
+        elif seleccion == "astronomia":
+            await astronomia_mcp_loop(chatbot.logger)
         elif seleccion == "f1":
             await f1_mcp_loop()
+        elif seleccion == "personal_trainer":
+            await personal_trainer_mcp_loop(chatbot.logger)
+        elif seleccion == "mcp_remoto":
+            await remote_mcp_loop()
+        elif seleccion == "logs":
+            await view_logs_loop()
         elif seleccion == "salir":
             console.print("[success]¡Hasta luego! 👋")
             break
-        else:
-            console.print(Panel(f"[highlight]Opción '{seleccion}' - Próximamente...[/highlight]"))
-            Prompt.ask("[input]Presiona Enter para volver al menú...")
+
+async def chat_general_loop(chatbot: 'MCPChatbot'):
+    """Bucle para el chat general con el LLM."""
+    console.clear()
+    console.print(Panel("[title]💬 [bold]Chat General (LLM)[/bold]", style="title"))
+    console.print("Escribe tu mensaje o usa [bold]/help[/bold] para ver los comandos. Escribe [bold]volver[/bold] para regresar.")
+    
+    while True:
+        try:
+            user_input = Prompt.ask("👤 Tú").strip()
+            if user_input.lower() == "volver":
+                break
+            if not await chatbot.process_user_input(user_input):
+                break # Salir si el comando lo indica
+        except (KeyboardInterrupt, EOFError):
+            break
+    console.print()
+
+async def view_logs_loop():
+    """Muestra los logs de MCP y espera para volver al menú."""
+    console.clear()
+    console.print(Panel("[title]📄 [bold]Visor de Logs MCP[/bold]", style="title"))
+    logger = MCPLogger()
+    summary = logger.get_log_summary()
+
+    table = Table(title="Resumen de Interacciones MCP")
+    table.add_column("Métrica", style="cyan")
+    table.add_column("Valor", style="magenta")
+    table.add_row("Total de Interacciones", str(summary['total_interactions']))
+    table.add_row("Peticiones (Requests)", str(summary['requests']))
+    table.add_row("Respuestas (Responses)", str(summary['responses']))
+    table.add_row("Errores", str(summary['errors']))
+    table.add_row("Tasa de Éxito", f"{summary['success_rate']:.1%}")
+    console.print(table)
+
+    if hasattr(logger, 'log_data') and logger.log_data:
+        console.print("\n[bold]Últimas 10 entradas del log:[/bold]")
+        log_table = Table(show_header=True, header_style="bold yellow")
+        log_table.add_column("Timestamp", width=20)
+        log_table.add_column("Tipo")
+        log_table.add_column("Servidor")
+        log_table.add_column("Detalle")
+        
+        for entry in logger.log_data[-10:]:
+            timestamp = entry.get('timestamp', '')[:19].replace("T", " ")
+            log_type = entry.get('type', '')
+            server = entry.get('server', 'N/A')
+            detail = ""
+            if log_type == "mcp_request":
+                detail = f"Método: {entry.get('method')}"
+            elif log_type == "mcp_response":
+                detail = f"Método: {entry.get('method')}, Éxito: {'✅' if entry.get('success') else '❌'}"
+            elif log_type == "mcp_error":
+                detail = f"Error: {entry.get('error')}"
+
+            log_table.add_row(timestamp, log_type, server, detail)
+        console.print(log_table)
+    else:
+        console.print("\nNo hay entradas en el log.")
+
+    Prompt.ask("\n[input]Presiona Enter para volver al menú...[/input]")
 
 
 
@@ -254,7 +494,7 @@ class MCPChatbot:
             return True
 
         elif cmd == "/log":
-            self.logger.show_mcp_log()
+            self.logger.show_logs(console)
             return True
 
         elif cmd in ["/salir", "/exit", "/quit"]:

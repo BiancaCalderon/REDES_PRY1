@@ -7,3 +7,8 @@ chat_log.json
 .DS_Store
 */workspace/
 workspace/
+
+# Added by Gemini to ignore virtual env, root logs, and ephemeris files
+venv/
+logs/
+*.bsp

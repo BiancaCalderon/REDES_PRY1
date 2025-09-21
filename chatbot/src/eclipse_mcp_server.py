@@ -14,7 +14,7 @@ from mcp.server import NotificationOptions, Server
 from mcp.server.models import InitializationOptions
 from mcp.server.stdio import stdio_server
 
-# --- Base de Datos de Eclipses Ampliada ---
+# --- Base de Datos de Eclipses ---
 ECLIPSES_DATA = {
     "2025-03-14": {
         "type": "lunar_total", "description": "Total Lunar Eclipse",

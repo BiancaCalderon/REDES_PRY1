@@ -7,8 +7,13 @@
     },
     "pokemon": {
       "type": "stdio",
-      "cwd": "/home/tu_usuario/peers/pokemon-mcp/src",
+      "cwd": " /home/bianca_cal/chatbot-server/src",
       "command": "python3",
-      "args": ["-m", "pokemon_mcp"]
+      "args": ["-m", "server"]
+    },
+    "personal_trainer": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["server.py", "stdio"]
     }
   }

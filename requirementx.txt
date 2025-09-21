@@ -1,6 +1,6 @@
 # requirements.txt
 anthropic>=0.8.0           # Cliente oficial de Anthropic
-mcp                        # SDK oficial de MCP
+mcp[cli]>=1.2.0            # SDK oficial de MCP
 astropy>=5.3              # Cálculos astronómicos
 ephem>=4.1.4              # Efemérides astronómicas
 requests>=2.31.0          # Peticiones HTTP
@@ -8,5 +8,6 @@ python-dateutil>=2.8.2    # Manejo de fechas
 click>=8.1.0              # CLI interface
 rich>=13.0.0              # Output formatti
 ng
-asyncio                   # Comunicación asíncrona MCP
 python-dotenv
+pydantic
+httpx

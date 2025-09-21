@@ -27,6 +27,13 @@ class ExternalMCPClient:
         self.server_path = Path(server_path)
         self.session = None
         self.stack = None
+
+    async def __aenter__(self):
+        await self.connect()
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        await self.close()
     
     async def connect(self):
         """Conectar al servidor MCP"""
