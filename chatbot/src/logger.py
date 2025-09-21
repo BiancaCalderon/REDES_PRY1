@@ -2,6 +2,10 @@
 import json
 from datetime import datetime
 from pathlib import Path
+# Add these imports
+from rich.console import Console
+from rich.table import Table
+from rich.panel import Panel
 
 class MCPLogger:
     def __init__(self, log_file="logs/mcp_log.json"):
@@ -78,6 +82,47 @@ class MCPLogger:
             "errors": len(errors),
             "success_rate": len([r for r in responses if r.get("success", False)]) / len(responses) if responses else 0
         }
+
+    def show_logs(self, console):
+        """Mostrar resumen de logs MCP"""
+
+        console.print(Panel("[title]📄 [bold]Visor de Logs MCP[/bold]", style="title"))
+        summary = self.get_log_summary()
+
+        table = Table(title="Resumen de Interacciones MCP")
+        table.add_column("Métrica", style="cyan")
+        table.add_column("Valor", style="magenta")
+        table.add_row("Total de Interacciones", str(summary['total_interactions']))
+        table.add_row("Peticiones (Requests)", str(summary['requests']))
+        table.add_row("Respuestas (Responses)", str(summary['responses']))
+        table.add_row("Errores", str(summary['errors']))
+        table.add_row("Tasa de Éxito", f"{summary['success_rate']:.1%}")
+        console.print(table)
+
+        if hasattr(self, 'log_data') and self.log_data:
+            console.print("\n[bold]Últimas 10 entradas del log:[/bold]")
+            log_table = Table(show_header=True, header_style="bold yellow")
+            log_table.add_column("Timestamp", width=20)
+            log_table.add_column("Tipo")
+            log_table.add_column("Servidor")
+            log_table.add_column("Detalle")
+            
+            for entry in self.log_data[-10:]:
+                timestamp = entry.get('timestamp', '')[:19].replace("T", " ")
+                log_type = entry.get('type', '')
+                server = entry.get('server', 'N/A')
+                detail = ""
+                if log_type == "mcp_request":
+                    detail = f"Método: {entry.get('method')}"
+                elif log_type == "mcp_response":
+                    detail = f"Método: {entry.get('method')}, Éxito: {'✅' if entry.get('success') else '❌'}"
+                elif log_type == "mcp_error":
+                    detail = f"Error: {entry.get('error')}"
+
+                log_table.add_row(timestamp, log_type, server, detail)
+            console.print(log_table)
+        else:
+            console.print("\nNo hay entradas en el log.")
 
 # Global logger instance
 mcp_logger = MCPLogger()
