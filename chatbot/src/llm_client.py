@@ -1,29 +1,39 @@
 from dotenv import load_dotenv
 import os
-import requests
 import json
 from datetime import datetime
+import anthropic
 
 load_dotenv()
 
-ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 LOG_FILE = "chat_log.json"
 
-def ask_claude(messages, model="claude-sonnet-4-20250514", max_tokens=1024):
-    headers = {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json"
-    }
-    data = {
-        "model": model,
-        "max_tokens": max_tokens,
-        "messages": messages
-    }
-    response = requests.post(ANTHROPIC_API_URL, headers=headers, json=data)
-    response.raise_for_status()
-    return response.json()
+# Instanciar el cliente oficial de Anthropic
+client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+
+def ask_claude(messages, model="claude-sonnet-4-20250514", max_tokens=4096, tools=None):
+    """Llama a la API de Claude usando la librería oficial, con soporte para herramientas."""
+    try:
+        request_args = {
+            "model": model,
+            "max_tokens": max_tokens,
+            "messages": messages,
+        }
+        if tools:
+            request_args["tools"] = tools
+
+        response = client.messages.create(**request_args)
+        
+        # Devolvemos la respuesta como un diccionario para mantener la compatibilidad
+        return response.model_dump()
+    except Exception as e:
+        print(f"Error al llamar a la API de Claude: {e}")
+        # Devolver un error en un formato compatible
+        return {
+            "type": "error",
+            "error": {"type": "api_error", "message": str(e)}
+        }
 
 def log_interaction_json(user_message, assistant_message):
     log_entry = {
@@ -31,7 +41,6 @@ def log_interaction_json(user_message, assistant_message):
         "user": user_message,
         "assistant": assistant_message
     }
-    # Leer el log existente o crear uno nuevo
     if os.path.exists(LOG_FILE):
         with open(LOG_FILE, "r", encoding="utf-8") as f:
             try:
@@ -45,6 +54,7 @@ def log_interaction_json(user_message, assistant_message):
         json.dump(log_data, f, ensure_ascii=False, indent=2)
 
 def main():
+    """Función de prueba para el cliente de LLM."""
     print("¡Bienvenido al chat con Claude! Escribe 'salir' para terminar.\n")
     messages = []
     while True:
@@ -53,28 +63,33 @@ def main():
             print("¡Hasta luego!")
             break
 
-        # Añade el mensaje del usuario al historial
         messages.append({"role": "user", "content": user_input})
 
-        # Llama al modelo con todo el historial
         try:
             result = ask_claude(messages)
-            # Extrae la respuesta del asistente
-            if "content" in result and result["content"]:
-                assistant_message = result["content"][0]["text"]
-            else:
-                assistant_message = "[Sin respuesta]"
+            
+            if result.get('type') == 'error':
+                print(f"Error: {result['error']['message']}")
+                messages.pop() # Eliminar el último mensaje de usuario si hubo un error
+                continue
 
-            print(f"Claude: {assistant_message}")
+            # Extrae la respuesta del asistente
+            response_text = ""
+            for content_block in result.get("content", []):
+                if content_block.get("type") == "text":
+                    response_text += content_block["text"]
+            
+            if not response_text:
+                response_text = "[Sin respuesta de texto]"
+
+            print(f"Claude: {response_text}")
 
             # Añade la respuesta del asistente al historial
-            messages.append({"role": "assistant", "content": assistant_message})
-
-            # Log de la interacción en formato JSON
-            log_interaction_json(user_input, assistant_message)
+            messages.append({"role": "assistant", "content": response_text})
+            log_interaction_json(user_input, response_text)
 
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"Error inesperado: {e}")
 
 if __name__ == "__main__":
     main()

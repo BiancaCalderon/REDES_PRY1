@@ -212,3 +212,7 @@ Recuerda que puedes acceder a información específica sobre eclipses solares, e
             if topic.lower() in msg["content"].lower():
                 return True
         return False
+    
+    def reset(self):
+        """Reinicia la conversación. Alias para clear_conversation."""
+        self.clear_conversation()

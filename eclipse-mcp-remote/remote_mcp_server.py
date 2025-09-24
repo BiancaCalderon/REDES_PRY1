@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Servidor MCP de Eclipses Remoto - Desplegable en la nube
-Basado en tu eclipse_mcp_server.py existente
+Basado en eclipse_mcp_server.py
 Funcionalidad: Cálculo de eclipses solares para ubicaciones específicas
 """
 
