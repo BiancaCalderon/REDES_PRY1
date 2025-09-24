@@ -61,9 +61,9 @@ Recuerda que puedes acceder a información específica sobre eclipses solares, e
         
         self.messages.append(message)
         
-        # Mantener solo los últimos max_messages mensajes para evitar exceder límites de tokens
+        # Mantiene solo los últimos max_messages mensajes para evitar exceder límites de tokens
         if len(self.messages) > self.max_messages:
-            # Mantener los primeros mensajes importantes y los más recientes
+            # Manteniene los primeros mensajes importantes y los más recientes
             important_messages = self.messages[:2]  # Primeros mensajes del contexto
             recent_messages = self.messages[-(self.max_messages-2):]
             self.messages = important_messages + recent_messages

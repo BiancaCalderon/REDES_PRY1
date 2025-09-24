@@ -290,6 +290,9 @@ class MCPChatbot:
                 
                 console.print(f"🤖 [bold]Claude:[/bold] {final_response_text}")
 
+                # Guardar la interacción en el log
+                log_interaction_json(user_input, final_response_text)
+
             except (KeyboardInterrupt, EOFError):
                 break
             except Exception as e:

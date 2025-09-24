@@ -10,6 +10,7 @@ from rich.panel import Panel
 class MCPLogger:
     def __init__(self, log_file="logs/mcp_log.json"):
         self.log_file = Path(log_file)
+        print(f"Log file path: {self.log_file.resolve()}")
         self.log_file.parent.mkdir(parents=True, exist_ok=True)
         self._load_log()
     
