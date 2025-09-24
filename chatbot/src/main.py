@@ -69,6 +69,18 @@ class MCPChatbot:
         """Define la lista de herramientas disponibles para el LLM."""
         return [
             {
+                "name": "create_repository",
+                "description": "Crea un nuevo directorio, lo inicializa como un repositorio de Git, crea un archivo README.md con contenido y realiza el primer commit. Todo en un solo paso.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "repo_name": {"type": "string", "description": "El nombre del nuevo repositorio a crear. Por ejemplo: 'mi-nuevo-proyecto'."},
+                        "readme_content": {"type": "string", "description": "El contenido de texto que se escribirá en el archivo README.md."}
+                    },
+                    "required": ["repo_name", "readme_content"]
+                }
+            },
+            {
                 "name": "predict_next_eclipse",
                 "description": "Predice el próximo eclipse solar o lunar visible desde una ubicación específica. Devuelve la fecha, tipo y descripción del próximo eclipse.",
                 "input_schema": {
@@ -106,19 +118,6 @@ class MCPChatbot:
                 }
             },
             {
-                "name": "create_text_file",
-                "description": "Crea un archivo de texto con el contenido proporcionado en un repositorio o directorio específico.",
-                "input_schema": {
-                    "type": "object",
-                    "properties": {
-                        "repo_name": {"type": "string", "description": "El nombre del repositorio o directorio donde se creará el archivo."},
-                        "filename": {"type": "string", "description": "El nombre del archivo a crear, por ejemplo 'informe.txt'."},
-                        "content": {"type": "string", "description": "El contenido o texto que se escribirá en el archivo."} 
-                    },
-                    "required": ["repo_name", "filename", "content"]
-                }
-            },
-            {
                 "name": "compute_metrics",
                 "description": "Calcula el Índice de Masa Corporal (IMC) y la Tasa Metabólica Basal (TMB) de una persona.",
                 "input_schema": {
@@ -139,8 +138,8 @@ class MCPChatbot:
                     "type": "object",
                     "properties": {
                         "objetivo": {"type": "string", "description": "El objetivo de la rutina, ej: 'perder peso', 'ganar músculo'."},
-                        "dias_por_semana": {"type": "integer", "description": "Número de días disponibles para entrenar."} ,
-                        "minutos_por_sesion": {"type": "integer", "description": "Duración en minutos de cada sesión de entrenamiento."} ,
+                        "dias_por_semana": {"type": "integer", "description": "Número de días disponibles para entrenar."},
+                        "minutos_por_sesion": {"type": "integer", "description": "Duración en minutos de cada sesión de entrenamiento."},
                         "experiencia": {"type": "string", "description": "Nivel de experiencia, ej: 'principiante', 'intermedio', 'avanzado'."}
                     },
                     "required": ["objetivo", "dias_por_semana", "minutos_por_sesion", "experiencia"]
@@ -151,7 +150,20 @@ class MCPChatbot:
     async def execute_tool(self, tool_name: str, tool_args: dict):
         """Ejecuta la herramienta seleccionada y devuelve el resultado."""
         try:
-            if tool_name == "predict_next_eclipse":
+            if tool_name == "create_repository":
+                repo_name = tool_args.get("repo_name")
+                content = tool_args.get("readme_content")
+                file_success = await self.filesystem_mcp.create_file_direct(
+                    content, "README.md", repo_name
+                )
+                if not file_success:
+                    return {"error": f"Fallo al crear el archivo README en el repositorio {repo_name}."}
+                git_success = await self.git_mcp.setup_repository(repo_name)
+                if not git_success:
+                    return {"error": f"Fallo al inicializar el repositorio Git para {repo_name}."}
+                return {"status": "success", "message": f"Repositorio '{repo_name}' creado exitosamente con README.md y commit inicial."}
+            
+            elif tool_name == "predict_next_eclipse":
                 async with self.eclipse_mcp as client:
                     return await client.predict_next_eclipse(tool_args.get("location"))
             elif tool_name == "calculate_eclipse_visibility":
@@ -160,12 +172,6 @@ class MCPChatbot:
             elif tool_name == "get_f1_calendar":
                 async with self.f1_mcp as client:
                     return await client.get_calendar(tool_args.get("season"))
-            elif tool_name == "create_text_file":
-                return await self.filesystem_mcp.create_file_direct(
-                    tool_args.get("content"),
-                    tool_args.get("filename"),
-                    tool_args.get("repo_name")
-                )
             elif tool_name == "compute_metrics":
                 async with self.personal_trainer_mcp as client:
                     return await client.call_tool("compute_metrics", {"args": tool_args})
